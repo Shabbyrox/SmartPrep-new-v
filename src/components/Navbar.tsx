@@ -22,7 +22,7 @@ export default function Navbar() {
         { href: '/interview', label: 'Interview' },
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/profile', label: 'Profile' },
-        { href: '/paymentGateway',label:'Payment'},
+        { href: '/premium', label: 'Premium' },
     ]
 
     return (
