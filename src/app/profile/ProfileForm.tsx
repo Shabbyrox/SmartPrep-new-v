@@ -22,7 +22,7 @@ export default function ProfileForm({ user, profile }: { user: any, profile: any
         const displayName = name || user.email || 'User'
         return displayName
             .split(' ')
-            .map((n) => n[0])
+            .map((n: String) => n[0])
             .join('')
             .substring(0, 2)
             .toUpperCase()
