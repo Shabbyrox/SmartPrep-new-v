@@ -1,3 +1,4 @@
+// src/app/page.tsx
 'use client'
 
 import Link from 'next/link'
@@ -6,6 +7,7 @@ import { FileText, Target, Award, Brain, MessageSquare, ArrowRight, CheckCircle2
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter, usePathname } from 'next/navigation'
+import LandingFooter from '@/components/LandingFooter'
 
 // --- 1. Reusable Components (Button & Card) ---
 const Button = ({ children, className, variant = 'primary', ...props }: any) => {
@@ -385,7 +387,7 @@ export default function LandingPage() {
       </section>
 
       {/* ADDED FOOTER HERE */}
-      <Footer />
+      <LandingFooter />
     </div>
   )
 }

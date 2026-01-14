@@ -1,3 +1,4 @@
+// src/app/login/page.tsx
 'use client'
 
 import { useState, useEffect, Suspense } from 'react' // 👈 Added Suspense and useEffect
@@ -7,6 +8,7 @@ import { login, signup } from './actions'
 import GoogleSignInButton from './google-signin-button'
 import LandingHeader from '@/components/LandingHeader'
 import LandingFooter from '@/components/LandingFooter'
+import Footer from '@/app/page'
 
 // Create a separate component for the form logic to handle SearchParams safely
 function LoginForm() {
