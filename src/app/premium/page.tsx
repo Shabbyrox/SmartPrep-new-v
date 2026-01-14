@@ -1,5 +1,5 @@
 // src/app/premium/page.tsx
-import PaymentGateway from '@/components/paymentGateway';
+import PaymentGateway from '@/components/PaymentGateway_Tempname';
 
 export default function PremiumPage() {
   return (
