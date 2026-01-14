@@ -1,3 +1,4 @@
+// src/components/DashboardChart.tsx
 'use client'
 
 import dynamic from 'next/dynamic'
@@ -75,7 +76,7 @@ export default function DashboardChart({ data, quizScore, resumeScore, interview
                                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' 
                                 }}
                                 itemStyle={{ color: '#4f46e5', fontWeight: 600 }}
-                                formatter={(value: number) => [`${value}%`, 'Avg Score']}
+                                formatter={(value: any) => [`${value}%`, 'Avg Score']}
                                 labelFormatter={(label) => new Date(label).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             />
                             
