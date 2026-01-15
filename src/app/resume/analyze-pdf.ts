@@ -5,28 +5,42 @@ import { generateContentWithRetry } from '../../utils/gemini'
 import { createClient } from '@/utils/supabase/server' // 👈 Added Import
 // @ts-ignore
 import PDFParser from 'pdf2json'
+import { checkDailyLimit, incrementDailyLimit } from '@/utils/usage-limiter'
 
 export async function analyzePdfResume(formData: FormData) {
     const file = formData.get('file') as File
     if (!file) return { error: 'No file uploaded' }
+    
+    // Optional: Add size check here to prevent large uploads
+    if (file.size > 5 * 1024 * 1024) return { error: 'File too large (Max 5MB)' }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 1. Upload File to Supabase Storage
-    let publicUrl = null
-    if (user) {
-        const fileExt = file.name.split('.').pop()
-        const filePath = `${user.id}/${Date.now()}.${fileExt}`
-        
-        const { error: uploadError } = await supabase.storage
-            .from('resumes')
-            .upload(filePath, file)
+    // 🔴 FIX: Guard clause to handle null user
+    if (!user) {
+        return { error: 'You must be logged in to analyze resumes.' }
+    }
 
-        if (!uploadError) {
-            const { data } = supabase.storage.from('resumes').getPublicUrl(filePath)
-            publicUrl = data.publicUrl
-        }
+    // 1. CHECK LIMIT (Read-only, doesn't charge yet)
+    // Now safe to use user.id because we checked !user above
+    const limitState = await checkDailyLimit(supabase, user.id, 'pdf_scan_count')
+    if (!limitState.allowed) {
+        return { error: limitState.message }
+    }
+
+    // 2. Upload File to Supabase Storage
+    let publicUrl = null
+    const fileExt = file.name.split('.').pop()
+    const filePath = `${user.id}/${Date.now()}.${fileExt}`
+    
+    const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(filePath, file)
+
+    if (!uploadError) {
+        const { data } = supabase.storage.from('resumes').getPublicUrl(filePath)
+        publicUrl = data.publicUrl
     }
 
     try {
@@ -84,14 +98,14 @@ export async function analyzePdfResume(formData: FormData) {
         try {
             const result = JSON.parse(jsonStr)
 
-            if (user && result) {
+            if (result) {
                 // Merging roles into feedback for storage
                 const feedbackToStore = {
                     ...result.feedback,
                     recommendedJobRoles: result.recommendedJobRoles
                 }
 
-                // 2. Save New Record to DB
+                // 3. Save New Record to DB
                 await supabase.from('resume_analyses').insert({
                     user_id: user.id,
                     overall_score: result.overallScore,
@@ -102,11 +116,12 @@ export async function analyzePdfResume(formData: FormData) {
                     created_at: new Date().toISOString()
                 })
 
+                // 4. ✅ SUCCESS: Increment the limit now!
+                await incrementDailyLimit(supabase, user.id, 'pdf_scan_count')
+
                 // ---------------------------------------------------------
-                // 3. [NEW] CLEANUP LOGIC (Keep only latest 5) 🧹
+                // 5. CLEANUP LOGIC (Keep only latest 5)
                 // ---------------------------------------------------------
-                
-                // A. Fetch all history for this user (Sorted by Newest first)
                 const { data: history } = await supabase
                     .from('resume_analyses')
                     .select('id, file_url')
@@ -114,18 +129,13 @@ export async function analyzePdfResume(formData: FormData) {
                     .eq('source', 'pdf_scan')
                     .order('created_at', { ascending: false })
 
-                // B. Check if we have more than 5 items
                 if (history && history.length > 5) {
-                    // Identify the old ones (Index 5 and greater)
                     const recordsToDelete = history.slice(5) 
                     
-                    // C. Delete files from Storage Bucket
                     const pathsToDelete = recordsToDelete
                         .map(r => r.file_url)
-                        .filter(url => url) // Ensure URL exists
+                        .filter(url => url)
                         .map(url => {
-                            // Extract the actual storage path (everything after '/resumes/')
-                            // URL format: .../storage/v1/object/public/resumes/[USER_ID]/[FILE].pdf
                             const parts = url.split('/resumes/')
                             return parts[1] 
                         })
@@ -134,7 +144,6 @@ export async function analyzePdfResume(formData: FormData) {
                         await supabase.storage.from('resumes').remove(pathsToDelete)
                     }
 
-                    // D. Delete records from Database
                     const idsToDelete = recordsToDelete.map(r => r.id)
                     await supabase.from('resume_analyses').delete().in('id', idsToDelete)
                 }

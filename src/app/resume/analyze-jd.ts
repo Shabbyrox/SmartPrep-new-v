@@ -5,31 +5,41 @@ import { generateContentWithRetry } from '../../utils/gemini'
 import { createClient } from '@/utils/supabase/server'
 // @ts-ignore
 import PDFParser from 'pdf2json'
+// 👇 Import Limiter
+import { checkDailyLimit, incrementDailyLimit } from '@/utils/usage-limiter'
 
 export async function analyzeResumeWithJD(formData: FormData) {
     const file = formData.get('file') as File
     const jobRole = formData.get('jobRole') as string
     const jobDescription = formData.get('jobDescription') as string
 
-    if (!file || !jobRole || !jobDescription) return { error: 'Missing fields' }
+    if (!file || !jobRole || !jobDescription) {
+        return { error: 'Missing file or job details' }
+    }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // 1. Upload File
-    let publicUrl = null
-    if (user) {
-        const fileExt = file.name.split('.').pop()
-        const filePath = `${user.id}/jd_${Date.now()}.${fileExt}`
-        
-        const { error: uploadError } = await supabase.storage
-            .from('resumes')
-            .upload(filePath, file)
+    if (!user) return { error: 'Unauthorized' }
 
-        if (!uploadError) {
-            const { data } = supabase.storage.from('resumes').getPublicUrl(filePath)
-            publicUrl = data.publicUrl
-        }
+    // 1. CHECK LIMIT 🛑
+    const limitState = await checkDailyLimit(supabase, user.id, 'jd_match_count')
+    if (!limitState.allowed) {
+        return { error: limitState.message }
+    }
+
+    // Upload file (logic remains same)
+    let publicUrl = null
+    const fileExt = file.name.split('.').pop()
+    const filePath = `${user.id}/jd-match/${Date.now()}.${fileExt}`
+    
+    const { error: uploadError } = await supabase.storage
+        .from('resumes')
+        .upload(filePath, file)
+
+    if (!uploadError) {
+        const { data } = supabase.storage.from('resumes').getPublicUrl(filePath)
+        publicUrl = data.publicUrl
     }
 
     try {
@@ -68,78 +78,34 @@ export async function analyzeResumeWithJD(formData: FormData) {
             }
         }
         `
-
-       const text = await generateContentWithRetry(prompt)
-
-        // JSON extraction
+const text = await generateContentWithRetry(prompt)
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         let jsonStr = jsonMatch ? jsonMatch[0] : text;
         jsonStr = jsonStr.replace(/[\x00-\x1F\x7F-\x9F]/g, (char) => (['\n','\t','\r'].includes(char) ? char : ''));
 
-        try {
-            const result = JSON.parse(jsonStr)
-            
-            if (user && result) {
-                // 👇 MERGE missingKeywords into the feedback object so it is saved!
-                const feedbackToStore = {
+        const result = JSON.parse(jsonStr)
+
+        if (user && result) {
+            await supabase.from('jd_matches').insert({
+                user_id: user.id,
+                job_role: jobRole,
+                overall_score: result.matchScore,
+                feedback: JSON.stringify({
                     ...result.feedback,
-                    missingKeywords: result.missingKeywords 
-                }
+                    missingKeywords: result.missingKeywords
+                }),
+                file_url: publicUrl,
+                created_at: new Date().toISOString()
+            })
 
-                await supabase.from('resume_analyses').insert({
-                    user_id: user.id,
-                    overall_score: result.matchScore,
-                    section_scores: {}, 
-                    feedback: JSON.stringify(feedbackToStore), // Now contains keywords
-                    source: 'jd_match',
-                    job_role: jobRole,
-                    file_url: publicUrl,
-                    created_at: new Date().toISOString()
-                })
-
-                // ---------------------------------------------------------
-                // 3. [NEW] CLEANUP LOGIC (Keep only latest 5 JD Scans) 🧹
-                // ---------------------------------------------------------
-                
-                // A. Fetch all JD history for this user
-                const { data: history } = await supabase
-                    .from('resume_analyses')
-                    .select('id, file_url')
-                    .eq('user_id', user.id)
-                    .eq('source', 'jd_match') // Only clean JD matches, don't touch quick scans
-                    .order('created_at', { ascending: false })
-
-                // B. Check limit
-                if (history && history.length > 5) {
-                    const recordsToDelete = history.slice(5) 
-                    
-                    // C. Delete Files
-                    const pathsToDelete = recordsToDelete
-                        .map(r => r.file_url)
-                        .filter(url => url)
-                        .map(url => {
-                            const parts = url.split('/resumes/')
-                            return parts[1] 
-                        })
-                    
-                    if (pathsToDelete.length > 0) {
-                        await supabase.storage.from('resumes').remove(pathsToDelete)
-                    }
-
-                    // D. Delete DB Records
-                    const idsToDelete = recordsToDelete.map(r => r.id)
-                    await supabase.from('resume_analyses').delete().in('id', idsToDelete)
-                }
-                // ---------------------------------------------------------
-            }
-            return result
-        } catch (e) {
-            console.log('JSON Parse Error', jsonStr)
-            return { error: 'AI returned invalid JSON. Please try again.' }
+            // 2. INCREMENT LIMIT ✅
+            await incrementDailyLimit(supabase, user.id, 'jd_match_count')
         }
 
+        return result
+
     } catch (error: any) {
-        console.error('Error analyzing Resume with JD:', error)
-        return { error: error.message || 'Failed to analyze resume' }
+        console.error("JD Match Error:", error)
+        return { error: error.message || 'Failed to analyze JD match' }
     }
 }

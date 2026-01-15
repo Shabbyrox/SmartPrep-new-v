@@ -3,8 +3,23 @@
 
 import { generateContentWithRetry } from '../../utils/gemini'
 import { createClient } from '@/utils/supabase/server'
+import { checkDailyLimit, incrementDailyLimit } from '@/utils/usage-limiter'
 
 export async function analyzeResume(resumeContent: any) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // 🔴 1. AUTH CHECK
+    if (!user) {
+        return { error: 'Unauthorized. Please log in.' }
+    }
+
+    // 🔴 2. CHECK LIMIT (Read-only, doesn't charge yet)
+    const limitState = await checkDailyLimit(supabase, user.id, 'builder_ai_count')
+    if (!limitState.allowed) {
+        return { error: limitState.message }
+    }
+    
     const prompt = `
     You are an expert Resume Reviewer. Analyze the following resume data and provide constructive feedback with scores.
     
@@ -47,21 +62,21 @@ export async function analyzeResume(resumeContent: any) {
         try {
             const result = JSON.parse(cleanText)
             
-            // Save to database
-            const supabase = await createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            
-            if (user) {
-                // We stringify the feedback object to store it
+            if (result) {
+                // Save to database
                 await supabase.from('resume_analyses').insert({
                     user_id: user.id,
                     overall_score: result.overallScore,
                     section_scores: result.sectionScores,
-                    feedback: JSON.stringify(result.feedback), // Store as string
+                    feedback: JSON.stringify(result.feedback), 
                     source: 'quick_analysis',
                     created_at: new Date().toISOString()
                 })
+
+                // 🔴 3. SUCCESS: Increment the limit now!
+                await incrementDailyLimit(supabase, user.id, 'builder_ai_count')
             }
+            
             return result
 
         } catch (e) {
