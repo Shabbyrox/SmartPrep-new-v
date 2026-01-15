@@ -1,3 +1,4 @@
+// src/components/ResumePreview.tsx
 import React from 'react'
 import { ResumeData } from '@/types/resume'
 

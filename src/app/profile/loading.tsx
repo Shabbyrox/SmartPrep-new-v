@@ -1,3 +1,4 @@
+// src/app/profile/loading.tsx
 export default function Loading() {
     return (
         <div className="flex min-h-screen flex-col items-center bg-gray-50 py-12 sm:px-6 lg:px-8">

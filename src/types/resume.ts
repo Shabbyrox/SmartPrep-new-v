@@ -1,3 +1,4 @@
+// src/types/resume.ts
 export interface ResumeData {
     personalInfo: {
         fullName: string

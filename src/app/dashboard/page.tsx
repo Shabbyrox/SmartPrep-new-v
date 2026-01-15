@@ -1,6 +1,7 @@
+// src/app/dashboard/page.tsx
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation'  
 import { Suspense } from 'react'
 import { StatsSection, ChartsSection, RoleProgressSection, RecentActivitySection } from '@/app/dashboard/DashboardSections'
 import { StatsSkeleton, ChartSkeleton, RoleProgressSkeleton, ActivitySkeleton } from '@/app/dashboard/Skeletons'

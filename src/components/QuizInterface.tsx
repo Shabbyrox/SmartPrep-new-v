@@ -1,3 +1,4 @@
+// src/components/QuizInterface.tsx
 'use client'
 
 import { useState } from 'react'

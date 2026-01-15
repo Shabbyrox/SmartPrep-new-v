@@ -1,3 +1,4 @@
+// src/app/resume/builder/page.tsx
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
@@ -5,17 +6,29 @@ import { useReactToPrint } from 'react-to-print'
 import { ResumeData, initialResumeData } from '@/types/resume'
 import ResumeForm from '@/components/ResumeForm'
 import { ResumePreview } from '@/components/ResumePreview'
-import { Download, ArrowLeft, Loader2, Sparkles, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react'
+import { Download, ArrowLeft, Loader2, Sparkles, AlertCircle, CheckCircle2, ChevronRight, XCircle, Lightbulb, Save } from 'lucide-react' // 👈 Import Save
 import { analyzeResume } from '../analyze'
-import ReactMarkdown from 'react-markdown'
+import { saveResume, loadResume } from './actions' // 👈 Import Actions
 import Link from 'next/link'
 
 export default function ResumeBuilder() {
     const [data, setData] = useState<ResumeData>(initialResumeData)
     const [analyzing, setAnalyzing] = useState(false)
+    const [saving, setSaving] = useState(false) // 👈 New Loading State
     const [analysisResult, setAnalysisResult] = useState<any>(null)
     const componentRef = useRef<HTMLDivElement>(null)
     const analysisRef = useRef<HTMLDivElement>(null)
+
+    // 👇 NEW: Load Saved Data on Mount
+    useEffect(() => {
+        const fetchSavedData = async () => {
+            const saved = await loadResume()
+            if (saved) {
+                setData(saved)
+            }
+        }
+        fetchSavedData()
+    }, [])
 
     useEffect(() => {
         if (analysisResult && analysisRef.current) {
@@ -28,9 +41,25 @@ export default function ResumeBuilder() {
         documentTitle: `${data.personalInfo.fullName}_Resume`,
     })
 
+    // 👇 NEW: Handle Save
+    const handleSave = async () => {
+        setSaving(true)
+        const result = await saveResume(data)
+        setSaving(false)
+        if (result.error) {
+            alert(result.error)
+        } else {
+            // Optional: Show a nice toast notification here instead of nothing
+            alert('Draft saved successfully!') 
+        }
+    }
+
     const handleAnalyze = async () => {
         setAnalyzing(true)
         setAnalysisResult(null)
+        // Auto-save before analyzing is a good UX practice
+        await saveResume(data) 
+        
         const result = await analyzeResume(data)
         if (result.error) {
             alert(result.error)
@@ -40,16 +69,42 @@ export default function ResumeBuilder() {
         setAnalyzing(false)
     }
 
+    // ... (Keep your existing getScoreColor, getProgressColor, InsightCard helpers) ...
+    // ... (Keep existing helpers) ...
     const getScoreColor = (score: number) => {
         if (score >= 80) return 'text-emerald-600 border-emerald-500 bg-emerald-50'
         if (score >= 60) return 'text-amber-600 border-amber-500 bg-amber-50'
         return 'text-rose-600 border-rose-500 bg-rose-50'
     }
-
     const getProgressColor = (score: number) => {
         if (score >= 80) return 'bg-emerald-500'
         if (score >= 60) return 'bg-amber-500'
         return 'bg-rose-500'
+    }
+    const InsightCard = ({ title, items, type }: { title: string, items: string[], type: 'success' | 'danger' | 'info' }) => {
+        if (!items || items.length === 0) return null
+        const styles = {
+            success: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900', icon: CheckCircle2, iconColor: 'text-emerald-600' },
+            danger: { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-900', icon: XCircle, iconColor: 'text-rose-600' },
+            info: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-900', icon: Lightbulb, iconColor: 'text-blue-600' },
+        }[type]
+        const Icon = styles.icon
+        return (
+            <div className={`rounded-xl border ${styles.border} ${styles.bg} p-5 mb-4 shadow-sm`}>
+                <div className="flex items-center gap-2 mb-3 border-b border-black/5 pb-2">
+                    <Icon className={`h-5 w-5 ${styles.iconColor}`} />
+                    <h4 className={`font-bold text-lg ${styles.text} uppercase tracking-wide`}>{title}</h4>
+                </div>
+                <ul className="space-y-2">
+                    {items.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-slate-700 text-sm leading-relaxed">
+                            <span className={`mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0 bg-current opacity-60`} />
+                            <span>{item}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        )
     }
 
     return (
@@ -67,6 +122,20 @@ export default function ResumeBuilder() {
                     </div>
                     
                     <div className="flex gap-3">
+                        {/* 👇 NEW: Save Draft Button */}
+                        <button
+                            onClick={handleSave}
+                            disabled={saving || analyzing}
+                            className="inline-flex items-center px-4 py-2 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none transition-all"
+                        >
+                            {saving ? (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                                <Save className="h-4 w-4 mr-2 text-slate-500" />
+                            )}
+                            {saving ? 'Saving...' : 'Save Draft'}
+                        </button>
+
                         <button
                             onClick={handleAnalyze}
                             disabled={analyzing}
@@ -95,6 +164,7 @@ export default function ResumeBuilder() {
                 </div>
             </header>
 
+            {/* ... (Keep your <main> section exactly the same) ... */}
             <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Left Side: Form */}
@@ -141,46 +211,29 @@ export default function ResumeBuilder() {
                                     </div>
                                 </div>
 
-                                {/* Detailed Feedback with Custom Styling */}
-                                <div className="p-6">
+                                {/* Detailed Feedback with Cards */}
+                                <div className="p-6 bg-slate-50/50">
                                     <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                                         <AlertCircle className="h-5 w-5 text-indigo-500" />
                                         Detailed Feedback
                                     </h4>
                                     
-                                    <div className="prose prose-sm max-w-none text-slate-600">
-                                        <ReactMarkdown
-                                            components={{
-                                                //  - This conceptual tag represents the custom rendering logic below
-                                                // Custom Header Styling (Makes topics look like cards/sections)
-                                                h3: ({node, ...props}) => (
-                                                    <h3 className="text-md font-bold text-indigo-900 mt-6 mb-3 flex items-center gap-2 border-b border-indigo-100 pb-2">
-                                                        <ChevronRight className="h-4 w-4 text-indigo-500" />
-                                                        {props.children}
-                                                    </h3>
-                                                ),
-                                                // Custom Paragraph Styling
-                                                p: ({node, ...props}) => (
-                                                    <p className="mb-3 text-slate-600 leading-relaxed" {...props} />
-                                                ),
-                                                // Custom List Styling
-                                                ul: ({node, ...props}) => (
-                                                    <ul className="space-y-2 mb-4 bg-slate-50 p-4 rounded-lg border border-slate-100" {...props} />
-                                                ),
-                                                li: ({node, ...props}) => (
-                                                    <li className="flex items-start gap-2 text-slate-700">
-                                                        <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                                                        <span>{props.children}</span>
-                                                    </li>
-                                                ),
-                                                // Highlighted text
-                                                strong: ({node, ...props}) => (
-                                                    <strong className="font-bold text-indigo-700" {...props} />
-                                                )
-                                            }}
-                                        >
-                                            {analysisResult.feedback}
-                                        </ReactMarkdown>
+                                    <div className="space-y-4">
+                                        <InsightCard 
+                                            title="Key Strengths" 
+                                            items={analysisResult.feedback?.strengths} 
+                                            type="success" 
+                                        />
+                                        <InsightCard 
+                                            title="Areas to Improve" 
+                                            items={analysisResult.feedback?.weaknesses} 
+                                            type="danger" 
+                                        />
+                                        <InsightCard 
+                                            title="Actionable Suggestions" 
+                                            items={analysisResult.feedback?.suggestions} 
+                                            type="info" 
+                                        />
                                     </div>
                                 </div>
                             </div>

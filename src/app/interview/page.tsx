@@ -1,3 +1,4 @@
+// src/app/interview/page.tsx
 import InterviewCard from '@/components/InterviewCard'
 
 export default function InterviewPage() {

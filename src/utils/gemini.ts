@@ -1,3 +1,4 @@
+// src/utils/gemini.ts
 'use server'
 
 import { GoogleGenerativeAI } from '@google/generative-ai'

@@ -1,3 +1,4 @@
+// src/components/ScoresPieChart.tsx
 'use client'
 
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'

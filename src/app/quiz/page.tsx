@@ -1,3 +1,4 @@
+// src/app/quiz/page.tsx
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import { Lock, CheckCircle, Play, ArrowLeft } from 'lucide-react'

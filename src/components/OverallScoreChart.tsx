@@ -1,3 +1,4 @@
+// src/components/OverallScoreChart.tsx
 'use client'
 
 import { memo } from 'react'

@@ -1,3 +1,4 @@
+// src/components/InterviewCard.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'

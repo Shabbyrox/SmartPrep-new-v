@@ -1,3 +1,4 @@
+// src/app/quiz/[id]/page.tsx
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import QuizInterface from '@/components/QuizInterface'
