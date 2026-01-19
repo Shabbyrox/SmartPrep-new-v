@@ -47,7 +47,7 @@ export default function PlaylistGrid({ playlists, stats }: any) {
                     </div>
                     <input
                         type="text"
-                        className="block w-full pl-11 pr-10 py-4 border border-slate-200 rounded-2xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm hover:shadow-md text-base"
+                        className="block w-full pl-11 pr-10 py-4 border text-slate-700 border-slate-200 rounded-2xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm hover:shadow-md text-base"
                         placeholder="Search for a company or topic..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
