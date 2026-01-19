@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import { User, Briefcase, MapPin, Globe, Phone, Save, Loader2, Plus, X, Camera } from 'lucide-react'
+import { User, Briefcase, MapPin, Globe, Phone, Save, Loader2, Plus, X, Camera, Code } from 'lucide-react'
 
 export default function ProfileForm({ user, profile }: { user: any, profile: any }) {
     const supabase = createClient()
@@ -70,6 +70,7 @@ export default function ProfileForm({ user, profile }: { user: any, profile: any
             location: formData.get('location'),
             target_role: formData.get('targetRole'),
             preferred_industry: formData.get('preferredIndustry'),
+            leetcode_username: formData.get('leetcodeUsername'),
             skills: skills,
             updated_at: new Date().toISOString(),
         }
@@ -164,6 +165,16 @@ export default function ProfileForm({ user, profile }: { user: any, profile: any
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <ModernInput label="Target Role" name="targetRole" defaultValue={profile?.target_role} placeholder="Software Engineer" />
                         <ModernInput label="Preferred Industry" name="preferredIndustry" defaultValue={profile?.preferred_industry} placeholder="Fintech, HealthTech" />
+
+                        <div className="md:col-span-2">
+                            <ModernInput 
+                                label="LeetCode Username" 
+                                name="leetcodeUsername" 
+                                defaultValue={profile?.leetcode_username} 
+                                icon={Code} 
+                                placeholder="e.g. shubham_dev (Used for Coding Arena)" 
+                            />
+                        </div>
                         
                         {/* Interactive Skills UI */}
                         <div className="md:col-span-2 space-y-2">
