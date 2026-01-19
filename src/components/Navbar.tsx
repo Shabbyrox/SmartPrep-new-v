@@ -37,6 +37,7 @@ export default function Navbar() {
     const navLinks = [
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/quiz', label: 'Quizzes' },
+        {href: '/coding', label: 'Coding Arena' },
         { href: '/resume', label: 'Resume' },
         { href: '/interview', label: 'Interview' },
         { href: '/premium', label: 'Premium' },
