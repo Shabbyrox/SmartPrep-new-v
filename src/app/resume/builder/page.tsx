@@ -49,7 +49,7 @@ export default function ResumeBuilder() {
         if (result.error) {
             alert(result.error)
         } else {
-            // Optional: Show a nice toast notification here instead of nothing
+            // Optional: toast notification here 
             alert('Draft saved successfully!') 
         }
     }
@@ -69,8 +69,6 @@ export default function ResumeBuilder() {
         setAnalyzing(false)
     }
 
-    // ... (Keep your existing getScoreColor, getProgressColor, InsightCard helpers) ...
-    // ... (Keep existing helpers) ...
     const getScoreColor = (score: number) => {
         if (score >= 80) return 'text-emerald-600 border-emerald-500 bg-emerald-50'
         if (score >= 60) return 'text-amber-600 border-amber-500 bg-amber-50'

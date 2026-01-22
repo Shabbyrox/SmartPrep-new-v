@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { StatsSection, ChartsSection, RoleProgressSection, RecentActivitySection } from '@/app/dashboard/DashboardSections'
 import { StatsSkeleton, ChartSkeleton, RoleProgressSkeleton, ActivitySkeleton } from '@/app/dashboard/Skeletons'
+import FeedbackContext from '@/components/FeedbackContext'
 
 export default async function Dashboard() {
     const supabase = await createClient()
@@ -19,13 +20,28 @@ export default async function Dashboard() {
     // 2. Fetch Profile name (Fast - single row)
     const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
 
+    const { count } = await supabase
+        .from('feedback')
+        .select('*', { count: 'exact', head: true }) // 'head: true' means we only fetch the count, not the data (Faster)
+        .eq('user_id', user.id)
+
+    const hasGivenFeedback = count !== null && count > 0
+
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl mx-auto">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Welcome back, {profile?.full_name || user?.email?.split('@')[0]}!
-                    </h1>
+
+                    <div className="flex items-center flex-wrap">
+                        <h1 className="text-3xl font-bold text-gray-900">
+                            Welcome back, {profile?.full_name || user?.email?.split('@')[0]}!
+                        </h1>
+                        
+                        {/* 👇 CONDITIONALLY RENDER BUTTON */}
+                        {!hasGivenFeedback && <FeedbackContext />}
+                    </div>
+                    
+
                     <p className="mt-2 text-gray-600">Here's how you're doing on your learning journey.</p>
                 </div>
 

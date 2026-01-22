@@ -4,6 +4,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 // Local Button Component to keep styles consistent
 const HeaderButton = ({ children, className, variant = 'primary', ...props }: any) => {
@@ -47,6 +48,14 @@ export default function LandingHeader() {
     >
       <div className="container mx-auto flex h-16 items-center px-8">
         <Link href="/" className="flex items-center space-x-2">
+          {/* <Image 
+             src="/intraa_icon.jpeg" 
+             alt="Intraa Logo"
+             width={130} 
+             height={60} 
+             className="h-10 w-auto object-contain"
+             priority
+          /> */}
           <span className="text-2xl tracking-tight text-slate-900" style={{ fontWeight: 600, letterSpacing: '-0.02em' }}>Intraa</span>
         </Link>
         
