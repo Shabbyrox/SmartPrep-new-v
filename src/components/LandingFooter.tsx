@@ -76,6 +76,12 @@ export default function LandingFooter() {
               >
                 intraa252@gmail.com
               </a>
+              <a 
+                href="tel:+91 8108279354" 
+                className="text-sm text-slate-500 hover:text-indigo-600 transition-colors"
+              >
+                +91 81082 79354
+              </a>
               <span className="text-sm text-slate-500">
                 Mumbai, India
               </span>

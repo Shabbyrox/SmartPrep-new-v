@@ -8,6 +8,9 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter, usePathname } from 'next/navigation'
 import LandingFooter from '@/components/LandingFooter'
+import TeamSection from '@/components/TeamSection'
+import TestimonialsSection from '@/components/TestimonialsSection'
+import Image from 'next/image'
 
 // --- 1. Reusable Components (Button & Card) ---
 const Button = ({ children, className, variant = 'primary', ...props }: any) => {
@@ -56,7 +59,15 @@ function Header() {
     >
       <div className="container mx-auto flex h-16 items-center px-8">
         <Link href="/" className="flex items-center space-x-2">
-          <span className="text-2xl tracking-tight text-slate-900" style={{ fontWeight: 600, letterSpacing: '-0.02em' }}>Intraa</span>
+          {/* <Image 
+              src="/intraa_icon.jpeg" 
+              alt="Intraa Logo"
+              width={120} 
+              height={60} 
+              className="h-12 w-auto object-contains"
+              priority // Loads image immediately for LCP score
+           /> */}
+           <span className="text-2xl tracking-tight text-slate-900" style={{ fontWeight: 600, letterSpacing: '-0.02em' }}>Intraa</span>
         </Link>
         
         <nav className="ml-auto flex items-center space-x-8">
@@ -308,6 +319,10 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <TestimonialsSection />
+
+      <TeamSection />
 
       {/* Final CTA */}
       <section className="px-8 py-24 relative overflow-hidden bg-indigo-600">

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/actions'
 import { Menu, X, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 
 export default function Navbar() {
     const pathname = usePathname()
@@ -54,6 +55,13 @@ export default function Navbar() {
                     <div className="flex">
                         <div className="flex shrink-0 items-center">
                             <Link href="/dashboard" className="flex items-center gap-2">
+                                {/* <Image 
+                                    src="/intraa_icon.jpeg"
+                                    alt="Intraa Logo"
+                                    width={120} 
+                                    height={120} 
+                                    className="h-12 w-auto rounded-md object-contain" 
+                                /> */}
                                 <span className="text-xl font-bold text-slate-900 tracking-tight">
                                     Intraa
                                 </span>

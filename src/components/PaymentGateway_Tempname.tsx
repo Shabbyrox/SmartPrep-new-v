@@ -1,3 +1,4 @@
+// src/components/PaymentGateway_Tempname.tsx
 'use client'
 
 export default function PaymentGateway() {
