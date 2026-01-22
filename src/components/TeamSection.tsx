@@ -109,7 +109,7 @@ export default function TeamSection() {
                 
                 {/* Role */}
                 <div className="flex items-center justify-center gap-2 mb-4 mt-1">
-                  {member.role.includes('Founder') && <Crown className="h-4 w-4 text-amber-500 fill-amber-500" />}
+                  {/* {member.role.includes('Founder') && <Crown className="h-4 w-4 text-amber-500 fill-amber-500" />} */}
                   <p className="text-sm font-medium text-indigo-600">
                       {member.role}
                   </p>
