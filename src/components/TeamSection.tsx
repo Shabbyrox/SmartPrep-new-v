@@ -8,7 +8,7 @@ const team = [
   // 1. Founder
   {
     name: 'Sneh Limbani',
-    role: 'Founder & MD',
+    role: 'Founder & CEO',
     image: '/sneh_linkedin.png', 
     bio: 'Driven by a genuine passion to bridge the gap between education and industry, empowering students to reach their full potential.',
     socials: { 
@@ -16,11 +16,20 @@ const team = [
       linkedin: 'https://www.linkedin.com/in/sneh-limbani-b88113297'
     }
   },
+  {
+    name: 'Darshan Limbani',
+    role: 'Tech advisor & CFO',
+    image: '/darshan_photo.jpeg', 
+    bio: 'A visionary leader combining financial strategy with deep technical insight. Darshan oversees our fiscal health and technology roadmap to drive efficient scaling.',
+    socials: { 
+      linkedin: 'https://www.linkedin.com/in/darshan-paresh-limbani/'
+    }
+  },
   // 2. Lead Developer
   {
     name: 'Shubham Debnath',
-    role: 'Lead Developer',
-    image: null, 
+    role: 'CTO & Principal Engineer',
+    image: "/shubham_photo.jpeg", 
     bio: 'Leading the technical architecture and core development of the platform.',
     socials: { 
       linkedin: 'https://www.linkedin.com/in/shubhamdebnath00', 
@@ -31,7 +40,7 @@ const team = [
   {
     name: 'Prasham Karkera',
     role: 'Full Stack Developer',
-    image: null,
+    image: "/prasham_photo.jpeg",
     bio: 'Building seamless full-stack solutions with a focus on intuitive user experiences.',
     socials: { 
       linkedin: 'https://www.linkedin.com/in/prasham-karkera-3a6820290/', 
@@ -53,7 +62,7 @@ const team = [
   {
     name: 'Yash Pithwa',
     role: 'Full Stack Developer',
-    image: null,
+    image: "/yash_photo.jpeg",
     // 👇 Shortened slightly to match the others perfectly
     bio: 'Optimizing database architecture and implementing data-driven AI logic.',
     socials: { 
