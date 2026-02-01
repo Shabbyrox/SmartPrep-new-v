@@ -39,7 +39,7 @@ export async function verifySubmission(questionId: string, questionSlug: string)
                 `,
                 variables: {
                     username: leetcodeUsername,
-                    limit: 20 // 👈 Increased limit to check more history
+                    limit: 20 //  limit to check more history
                 }
             }),
             cache: 'no-store'

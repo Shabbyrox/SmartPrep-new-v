@@ -1,9 +1,8 @@
-// src/components/PlaylistGrid.tsx
 'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Code2, ListTodo, Search, X, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, ListTodo, Search, X, CheckCircle2, Lock } from 'lucide-react'
 
 // Quick Filters
 const FILTERS = [
@@ -13,16 +12,15 @@ const FILTERS = [
     { label: 'Amazon', value: 'amazon' },
     { label: 'Microsoft', value: 'microsoft' },
     { label: 'Apple', value: 'apple' },
-    { label: 'SQL', value: 'sql' },       // 👈 Added
+    { label: 'SQL', value: 'sql' },
     { label: 'Design', value: 'design' },
     { label: 'Graphs', value: 'graph' }
 ]
 
-export default function PlaylistGrid({ playlists, stats }: any) {
+export default function PlaylistGrid({ playlists, stats, isPremium }: any) {
     const [searchTerm, setSearchTerm] = useState('')
-    const [activeFilter, setActiveFilter] = useState('all') // 👈 State for chips
+    const [activeFilter, setActiveFilter] = useState('all')
 
-    // Smart Filter Logic: Combines Search Text + Chip Selection
     const filteredPlaylists = playlists.filter((list: any) => {
         const matchesSearch = list.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                               list.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -87,20 +85,37 @@ export default function PlaylistGrid({ playlists, stats }: any) {
                         const stat = stats[list.id] || { total: 0, solved: 0, percent: 0 }
                         const isComplete = stat.percent === 100
                         
+                        // 🔒 LOCK LOGIC: Locked if NOT premium AND playlist is NOT google
+                        const isLocked = !isPremium && list.id !== 'google'
+
+                        // Render as div if locked (not clickable), Link if unlocked
+                        const Wrapper: any = isLocked ? 'div' : Link
+                        const wrapperProps = isLocked ? {} : { href: `/coding/${list.id}` }
+
                         return (
-                            <Link 
+                            <Wrapper 
                                 key={list.id} 
-                                href={`/coding/${list.id}`}
+                                {...wrapperProps}
                                 className={`group relative bg-white rounded-2xl p-6 border transition-all duration-300 flex flex-col ${
-                                    isComplete ? 'border-green-200 bg-green-50/30' : 'border-slate-200 hover:border-indigo-300 hover:shadow-xl hover:-translate-y-1'
+                                    isLocked 
+                                        ? 'border-slate-200 opacity-75 grayscale cursor-not-allowed' // Locked Style
+                                        : isComplete 
+                                            ? 'border-green-200 bg-green-50/30' 
+                                            : 'border-slate-200 hover:border-indigo-300 hover:shadow-xl hover:-translate-y-1'
                                 }`}
                             >
+                                {/* 🔒 PREMIUM BADGE */}
+                                {isLocked && (
+                                    <div className="absolute top-4 right-4 z-10 bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded flex items-center gap-1 shadow-lg">
+                                        <Lock className="w-3 h-3" /> Premium
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between items-start mb-4">
                                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-sm transition-transform group-hover:scale-110 ${list.color}`}>
                                         {list.icon}
                                     </div>
                                     
-                                    {/* Simplified Header: Just the Count */}
                                     <div className="flex flex-col items-end">
                                         <div className="bg-slate-100 px-2 py-1 rounded-md flex items-center gap-1.5 text-xs font-bold text-slate-600">
                                             <ListTodo className="w-3.5 h-3.5" />
@@ -136,7 +151,11 @@ export default function PlaylistGrid({ playlists, stats }: any) {
 
                                 {/* Action Footer */}
                                 <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-sm">
-                                    {isComplete ? (
+                                    {isLocked ? (
+                                        <span className="text-slate-500 font-bold flex items-center gap-2">
+                                            Upgrade to Unlock
+                                        </span>
+                                    ) : isComplete ? (
                                         <span className="flex items-center text-green-600 font-bold">
                                             <CheckCircle2 className="w-4 h-4 mr-1.5" /> All Done
                                         </span>
@@ -147,12 +166,16 @@ export default function PlaylistGrid({ playlists, stats }: any) {
                                     )}
                                     
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                                        isComplete ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-600 group-hover:bg-indigo-600 group-hover:text-white'
+                                        isLocked
+                                            ? 'bg-slate-100 text-slate-400'
+                                            : isComplete 
+                                                ? 'bg-green-100 text-green-600' 
+                                                : 'bg-slate-100 text-slate-600 group-hover:bg-indigo-600 group-hover:text-white'
                                     }`}>
-                                        <ArrowRight className="w-4 h-4" />
+                                        {isLocked ? <Lock className="w-3 h-3" /> : <ArrowRight className="w-4 h-4" />}
                                     </div>
                                 </div>
-                            </Link>
+                            </Wrapper>
                         )
                     })
                 ) : (

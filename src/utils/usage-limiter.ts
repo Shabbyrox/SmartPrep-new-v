@@ -1,7 +1,7 @@
 // src/utils/usage-limiter.ts
 import { SupabaseClient } from '@supabase/supabase-js'
 
-const MAX_DAILY_LIMIT = 8
+const MAX_DAILY_LIMIT = 3
 type UsageType = 'pdf_scan_count' | 'jd_match_count' | 'builder_ai_count'
 
 // 1. CHECK ONLY (Read-Only)
@@ -25,7 +25,7 @@ export async function checkDailyLimit(
 
     // If record exists for today, check the number
     if (usage[type] >= MAX_DAILY_LIMIT) {
-        return { allowed: false, message: `Daily limit reached (8/8). Try again tomorrow!` }
+        return { allowed: false, message: `Daily limit reached (3/3). Try again tomorrow!` }
     }
 
     return { allowed: true }

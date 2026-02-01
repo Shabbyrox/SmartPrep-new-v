@@ -18,8 +18,9 @@ export default async function QuizList({ searchParams }: { searchParams: Promise
 
     const { data: quizzes } = await query
 
-    const { data: results } = await supabase.from('quiz_results').select('*')
-
+const { data: results } = await supabase
+    .from('quiz_results')
+    .select('quiz_id, score, total_questions')
     // Group quizzes by role
     const quizzesByRole: Record<string, any[]> = {}
     quizzes?.forEach((quiz) => {
