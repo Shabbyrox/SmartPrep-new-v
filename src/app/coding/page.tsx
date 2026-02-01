@@ -1,5 +1,5 @@
-// src/app/coding/page.tsx
 import { CODING_PLAYLISTS } from '@/lib/coding-playlists'
+import { redirect } from 'next/navigation'
 import { Sparkles, Flame } from 'lucide-react'
 import { createClient } from '@/utils/supabase/server'
 import PlaylistGrid from '@/components/PlaylistGrid'
@@ -8,21 +8,32 @@ export default async function CodingLibraryPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Parallel Data Fetching by promise.all
-    const [solvedResponse, questionsResponse] = await Promise.all([
+    if (!user) redirect('/login')
+
+    // Parallel Data Fetching: Added Profile fetch for 'is_premium'
+    const [solvedResponse, questionsResponse, profileResponse] = await Promise.all([
         supabase
             .from('user_leetcode_progress')
             .select('question_id')
-            .eq('user_id', user?.id)
+            .eq('user_id', user.id)
             .eq('status', 'solved'),
         
         supabase
             .from('leetcode_questions')
-            .select('id, company_tags, topic_tags')
+            .select('id, company_tags, topic_tags'),
+
+        supabase
+            .from('profiles')
+            .select('is_premium')
+            .eq('id', user.id)
+            .single()
     ])
 
     const solvedData = solvedResponse.data
     const allQuestions = questionsResponse.data
+    // Default to false if profile fetch fails or is null
+    const isPremium = profileResponse.data?.is_premium || false
+
     // O(1) lookup for solved questions
     const solvedSet = new Set(solvedData?.map(s => s.question_id))
 
@@ -108,8 +119,12 @@ export default async function CodingLibraryPage() {
                     </div>
                 </div>
 
-                {/* The Interactive Grid */}
-                <PlaylistGrid playlists={CODING_PLAYLISTS} stats={playlistStats} />
+                {/* The Interactive Grid - NOW PASSING isPremium */}
+                <PlaylistGrid 
+                    playlists={CODING_PLAYLISTS} 
+                    stats={playlistStats} 
+                    isPremium={isPremium} 
+                />
 
             </div>
         </div>

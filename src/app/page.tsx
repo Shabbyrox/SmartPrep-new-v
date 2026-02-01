@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { FileText, Target, Award, Brain, MessageSquare, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { FileText, Target, Award, Brain, MessageSquare, ArrowRight, CheckCircle2, Code2Icon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter, usePathname } from 'next/navigation'
@@ -267,6 +267,11 @@ export default function LandingPage() {
                 icon: MessageSquare,
                 title: 'AI Mock Interviews',
                 description: 'Practice interviews with AI-powered feedback'
+              },
+              {
+                icon: Code2Icon,
+                title: 'Coding Arena',
+                description: 'Practice FAANG interview questions with real-time LeetCode verification'
               }
             ].map((feature, idx) => (
               <motion.div

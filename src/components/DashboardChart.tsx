@@ -89,7 +89,7 @@ export default function DashboardChart({ data, quizScore, resumeScore, interview
             </div>
 
             {/* RIGHT SIDE */}
-            {/* 3. CRITICAL FIX: explicit height here so the child's "h-full" works */}
+            {/* 3. FIX: explicit height here so the child's "h-full" works */}
             <div className="lg:col-span-1 min-h-[400px]">
                 <ScoresPieChart 
                     quizScore={quizScore} 
