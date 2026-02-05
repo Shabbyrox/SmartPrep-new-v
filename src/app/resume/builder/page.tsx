@@ -1,4 +1,4 @@
-// src/app/resume/builder/page.tsx
+// app/resume/builder/page.tsx
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
@@ -6,20 +6,22 @@ import { useReactToPrint } from 'react-to-print'
 import { ResumeData, initialResumeData } from '@/types/resume'
 import ResumeForm from '@/components/ResumeForm'
 import { ResumePreview } from '@/components/ResumePreview'
-import { Download, ArrowLeft, Loader2, Sparkles, AlertCircle, CheckCircle2, ChevronRight, XCircle, Lightbulb, Save } from 'lucide-react' // 👈 Import Save
+import { Download, ArrowLeft, Loader2, Sparkles, AlertCircle, CheckCircle2, XCircle, Lightbulb, Save } from 'lucide-react'
 import { analyzeResume } from '../analyze'
-import { saveResume, loadResume } from './actions' // 👈 Import Actions
+import { saveResume, loadResume } from './actions'
 import Link from 'next/link'
 
 export default function ResumeBuilder() {
     const [data, setData] = useState<ResumeData>(initialResumeData)
     const [analyzing, setAnalyzing] = useState(false)
-    const [saving, setSaving] = useState(false) // 👈 New Loading State
+    const [saving, setSaving] = useState(false)
     const [analysisResult, setAnalysisResult] = useState<any>(null)
+    
+    // The Ref for the Ghost Printer Element
     const componentRef = useRef<HTMLDivElement>(null)
     const analysisRef = useRef<HTMLDivElement>(null)
 
-    // 👇 NEW: Load Saved Data on Mount
+    // Load Saved Data on Mount
     useEffect(() => {
         const fetchSavedData = async () => {
             const saved = await loadResume()
@@ -36,12 +38,12 @@ export default function ResumeBuilder() {
         }
     }, [analysisResult])
 
+    // 👇 FIX: Updated for react-to-print v7+
     const handlePrint = useReactToPrint({
-        contentRef: componentRef,
+        contentRef: componentRef, // Pass the ref directly (no function needed)
         documentTitle: `${data.personalInfo.fullName}_Resume`,
     })
 
-    // 👇 NEW: Handle Save
     const handleSave = async () => {
         setSaving(true)
         const result = await saveResume(data)
@@ -49,7 +51,6 @@ export default function ResumeBuilder() {
         if (result.error) {
             alert(result.error)
         } else {
-            // Optional: toast notification here 
             alert('Draft saved successfully!') 
         }
     }
@@ -57,7 +58,6 @@ export default function ResumeBuilder() {
     const handleAnalyze = async () => {
         setAnalyzing(true)
         setAnalysisResult(null)
-        // Auto-save before analyzing is a good UX practice
         await saveResume(data) 
         
         const result = await analyzeResume(data)
@@ -106,21 +106,33 @@ export default function ResumeBuilder() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-slate-50 overflow-x-hidden w-full">
             {/* Top Bar */}
             <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
-                <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <Link href="/resume" className="text-slate-500 hover:text-indigo-600 transition-colors">
-                            <ArrowLeft className="h-5 w-5" />
-                        </Link>
-                        <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            AI Resume Builder
-                        </h1>
+                <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                        <div className="flex items-center gap-4">
+                             <Link href="/resume" className="text-slate-500 hover:text-indigo-600 transition-colors">
+                                <ArrowLeft className="h-5 w-5" />
+                            </Link>
+                            <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                AI Resume Builder
+                            </h1>
+                        </div>
+                        {/* Mobile Actions */}
+                         <div className="flex md:hidden gap-2">
+                            <button
+                                onClick={handleSave}
+                                disabled={saving || analyzing}
+                                className="p-2 border border-slate-300 rounded-lg text-slate-700 bg-white"
+                            >
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                            </button>
+                         </div>
                     </div>
                     
-                    <div className="flex gap-3">
-                        {/* 👇 NEW: Save Draft Button */}
+                    {/* Desktop Actions */}
+                    <div className="hidden md:flex gap-3">
                         <button
                             onClick={handleSave}
                             disabled={saving || analyzing}
@@ -159,21 +171,38 @@ export default function ResumeBuilder() {
                             Download PDF
                         </button>
                     </div>
+
+                    {/* Mobile Actions Stack */}
+                    <div className="flex md:hidden w-full gap-2">
+                         <button
+                            onClick={handleAnalyze}
+                            disabled={analyzing}
+                            className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white"
+                        >
+                            {analyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2 text-indigo-500" />}
+                            {analyzing ? 'Analyzing...' : 'AI Review'}
+                        </button>
+                        <button
+                            onClick={() => handlePrint()}
+                            className="flex-1 inline-flex justify-center items-center px-3 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600"
+                        >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                        </button>
+                    </div>
                 </div>
             </header>
 
-            {/* ... (Keep your <main> section exactly the same) ... */}
-            <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Main Content */}
+            <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Left Side: Form */}
-                    <div className="w-full lg:w-1/2 xl:w-2/5 h-[calc(100vh-140px)] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="w-full lg:w-1/2 xl:w-2/5 h-auto lg:h-[calc(100vh-140px)] lg:overflow-y-auto pr-2 custom-scrollbar">
                         <ResumeForm data={data} onChange={setData} />
 
                         {/* AI Feedback Area */}
                         {analysisResult && (
                             <div ref={analysisRef} className="mt-8 bg-white rounded-xl shadow-lg border border-indigo-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                
-                                {/* Header with Score */}
                                 <div className="bg-gradient-to-r from-indigo-50 to-white p-6 border-b border-indigo-100">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
@@ -186,7 +215,6 @@ export default function ResumeBuilder() {
                                         </div>
                                     </div>
 
-                                    {/* Section Scores Grid */}
                                     <div className="grid grid-cols-2 gap-3">
                                         {Object.entries(analysisResult.sectionScores || {}).map(([key, score]: [string, any]) => (
                                             <div key={key} className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
@@ -209,7 +237,6 @@ export default function ResumeBuilder() {
                                     </div>
                                 </div>
 
-                                {/* Detailed Feedback with Cards */}
                                 <div className="p-6 bg-slate-50/50">
                                     <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                                         <AlertCircle className="h-5 w-5 text-indigo-500" />
@@ -238,14 +265,25 @@ export default function ResumeBuilder() {
                         )}
                     </div>
 
-                    {/* Right Side: Preview */}
-                    <div className="w-full lg:w-1/2 xl:w-3/5 bg-slate-200/50 p-8 rounded-xl border border-slate-200 flex justify-center items-start overflow-y-auto h-[calc(100vh-140px)]">
+                    {/* Right Side: Visible Preview (Hidden on Mobile) */}
+                    <div className="hidden lg:flex w-full lg:w-1/2 xl:w-3/5 bg-slate-200/50 p-8 rounded-xl border border-slate-200 justify-center items-start overflow-y-auto h-[calc(100vh-140px)]">
                         <div className="transform scale-[0.85] origin-top shadow-2xl">
-                            <ResumePreview ref={componentRef} data={data} />
+                            {/* NOTE: Just for display, not printing */}
+                            <ResumePreview data={data} />
                         </div>
+                    </div>
+                    
+                    {/* Mobile Preview Message */}
+                    <div className="lg:hidden w-full bg-slate-100 p-4 rounded-lg text-center text-sm text-slate-500">
+                        Switch to Desktop to see Live Preview
                     </div>
                 </div>
             </main>
+
+            {/* GHOST PREVIEW FOR PRINTING (Hidden from screen, but available to printer) */}
+            <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+                <ResumePreview ref={componentRef} data={data} />
+            </div>
         </div>
     )
 }
