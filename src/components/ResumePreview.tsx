@@ -13,7 +13,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                 case 'education':
                     if (data.education.length === 0) return null
                     return (
-                        <div key="education" className="mb-4">
+                        <div key="education" className="mb-4 break-inside-avoid">
                             <h2 className="text-base font-bold uppercase border-b border-gray-300 mb-2">
                                 Education
                             </h2>
@@ -36,7 +36,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                 case 'projects':
                     if (data.projects.length === 0) return null
                     return (
-                        <div key="projects" className="mb-4">
+                        <div key="projects" className="mb-4 break-inside-avoid">
                             <h2 className="text-base font-bold uppercase border-b border-gray-300 mb-2">
                                 Projects
                             </h2>
@@ -60,7 +60,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                 case 'skills':
                     if (data.skills.length === 0) return null
                     return (
-                        <div key="skills" className="mb-4">
+                        <div key="skills" className="mb-4 break-inside-avoid">
                             <h2 className="text-base font-bold uppercase border-b border-gray-300 mb-2">
                                 Skills
                             </h2>
@@ -76,7 +76,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                 case 'achievements':
                     if (data.achievements.length === 0) return null
                     return (
-                        <div key="achievements" className="mb-4">
+                        <div key="achievements" className="mb-4 break-inside-avoid">
                             <h2 className="text-base font-bold uppercase border-b border-gray-300 mb-2">
                                 Achievements
                             </h2>
@@ -90,7 +90,7 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
                 case 'coCurricular':
                     if (data.coCurricular.length === 0) return null
                     return (
-                        <div key="coCurricular" className="mb-4">
+                        <div key="coCurricular" className="mb-4 break-inside-avoid">
                             <h2 className="text-base font-bold uppercase border-b border-gray-300 mb-2">
                                 Co-Curricular Activities
                             </h2>
@@ -118,11 +118,12 @@ export const ResumePreview = React.forwardRef<HTMLDivElement, ResumePreviewProps
         return (
             <div
                 ref={ref}
-                className="bg-white p-8 mx-auto text-gray-900 font-serif text-sm leading-relaxed"
+                // Updated ClassName: Added 'shadow-xl' for screen and 'print:shadow-none' for PDF
+                className="bg-white p-8 mx-auto text-gray-900 font-serif text-sm leading-relaxed shadow-xl print:shadow-none print:m-0"
                 style={{
                     width: '210mm',
                     minHeight: '297mm',
-                    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                    // Removed inline boxShadow so Tailwind classes can control it
                 }}
             >
                 {/* Header */}
