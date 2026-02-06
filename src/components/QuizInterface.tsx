@@ -1,7 +1,6 @@
-// src/components/QuizInterface.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { submitQuiz } from '@/app/quiz/actions'
 import { gradeCode } from '@/app/quiz/grade'
 import { useRouter } from 'next/navigation'
@@ -30,32 +29,44 @@ export default function QuizInterface({ quiz }: { quiz: Quiz }) {
     const [code, setCode] = useState('')
     const [grading, setGrading] = useState(false)
     const [feedback, setFeedback] = useState<string | null>(null)
+    const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const router = useRouter()
 
     const question = quiz.questions[currentQuestion]
 
-    // Reset code when question changes
-    if (question.type === 'code_challenge' && !code && question.starter_code) {
-        setCode(question.starter_code)
-    }
+    // ✅ FIX 1: Use useEffect to reset state when question changes
+    // This prevents the "Too many re-renders" crash
+    useEffect(() => {
+        if (question.type === 'code_challenge') {
+            setCode(question.starter_code || '')
+        } else {
+            setCode('')
+        }
+        setSelectedOption(null)
+        setFeedback(null)
+    }, [currentQuestion, question])
 
     const handleNext = (points: number) => {
-        setScore(score + points)
-        setFeedback(null)
-        setCode('')
-
+        const newScore = score + points
+        setScore(newScore)
+        
         if (currentQuestion + 1 < quiz.questions.length) {
             setCurrentQuestion(currentQuestion + 1)
         } else {
             setShowResults(true)
-            submitQuiz(quiz.id, score + points, quiz.questions.length)
+            submitQuiz(quiz.id, newScore, quiz.questions.length)
         }
     }
 
-    const handleMCQAnswer = (option: string) => {
+   const handleMCQAnswer = (option: string) => {
+    setSelectedOption(option); // Set visual state immediately
+    
+    // Optional: Add a small delay so they see what they clicked before moving on
+    setTimeout(() => {
         const isCorrect = option === question.answer
         handleNext(isCorrect ? 1 : 0)
-    }
+    }, 300); // 300ms delay for better UX
+}
 
     const handleCodeSubmit = async () => {
         setGrading(true)
@@ -75,8 +86,6 @@ export default function QuizInterface({ quiz }: { quiz: Quiz }) {
             setTimeout(() => handleNext(1), 1500)
         } else {
             setFeedback(`Incorrect. ${result.feedback}`)
-            // Allow retry or move on? For now, let them retry or skip.
-            // Adding a "Skip" button might be good, but for now let's just show feedback.
         }
     }
 
@@ -111,6 +120,7 @@ export default function QuizInterface({ quiz }: { quiz: Quiz }) {
                                 Question {currentQuestion + 1} of {quiz.questions.length}
                             </span>
                         </div>
+                        {/* Progress Bar */}
                         <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
                             <div
                                 className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
@@ -135,11 +145,12 @@ export default function QuizInterface({ quiz }: { quiz: Quiz }) {
                                         options={{
                                             minimap: { enabled: false },
                                             fontSize: 14,
+                                            scrollBeyondLastLine: false,
                                         }}
                                     />
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <div className="text-sm text-gray-600">
+                                    <div className={`text-sm ${feedback?.startsWith('Correct') ? 'text-green-600 font-bold' : 'text-gray-600'}`}>
                                         {grading ? 'Analyzing your code...' : feedback}
                                     </div>
                                     <div className="flex gap-2">
@@ -154,7 +165,7 @@ export default function QuizInterface({ quiz }: { quiz: Quiz }) {
                                             disabled={grading}
                                             className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                                         >
-                                            Submit Code
+                                            {grading ? 'Checking...' : 'Submit Code'}
                                         </button>
                                     </div>
                                 </div>
@@ -165,10 +176,18 @@ export default function QuizInterface({ quiz }: { quiz: Quiz }) {
                                     <button
                                         key={index}
                                         onClick={() => handleMCQAnswer(option)}
-                                        className="w-full text-left px-4 py-3 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-indigo-50 hover:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors text-gray-900"
+                                        // ✅ FIX: dynamic class based on 'selectedOption'
+                                        className={`w-full text-left px-4 py-3 border rounded-md shadow-sm transition-colors text-gray-900
+                                            ${selectedOption === option 
+                                                ? 'bg-indigo-100 border-indigo-500 ring-2 ring-indigo-500' // Highlight selected
+                                                : 'bg-white border-gray-300 hover:bg-indigo-50' // Normal state
+                                            }
+                                        `}
                                     >
                                         <div className="prose-sm">
-                                            <ReactMarkdown>{option}</ReactMarkdown>
+                                            <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                                                {option}
+                                            </ReactMarkdown>
                                         </div>
                                     </button>
                                 ))}
