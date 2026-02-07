@@ -110,7 +110,7 @@ export default function FeedbackContext() {
                     placeholder="Any suggestions? (Optional)"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    className="w-full text-sm p-3 bg-slate-50 rounded-lg border-transparent focus:border-indigo-500 focus:bg-white transition-colors resize-none"
+                    className="w-full text-sm p-3 text-slate-900 bg-slate-200 rounded-lg border-transparent focus:border-indigo-500 focus:bg-white transition-colors resize-none"
                   />
 
                   {/* Submit */}
