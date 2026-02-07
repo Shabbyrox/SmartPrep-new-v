@@ -1,232 +1,70 @@
 // src/app/forgot-password/page.tsx
 'use client'
 
-import { createClient } from '@/utils/supabase/client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
-export default function ForgotPasswordPage() {
-    const [email, setEmail] = useState('')
-    const [otp, setOtp] = useState('')
-    const [password, setPassword] = useState('')
-    const [step, setStep] = useState<'email' | 'otp' | 'password'>('email')
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [message, setMessage] = useState<string | null>(null)
-    const router = useRouter()
-    const supabase = createClient()
+import { useState, useTransition } from 'react'
+import { forgotPasswordAction } from './actions'
+import { ArrowLeft, Loader2, Mail } from 'lucide-react'
+import Link from 'next/link'
 
-    const handleSendOtp = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setLoading(true)
-        setError(null)
-        setMessage(null)
+export default function ForgotPassword() {
+    const [error, setError] = useState('')
+    const [isPending, startTransition] = useTransition()
 
-        try {
-            const { error } = await supabase.auth.signInWithOtp({
-                email,
-                options: {
-                    shouldCreateUser: false,
-                    emailRedirectTo: `${window.location.origin}/forgot-password`
-                },
-            })
-
-            if (error) throw error
-
-            setStep('otp')
-            setMessage('Check your email for the OTP code.')
-        } catch (err: any) {
-            setError(err.message)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleVerifyOtp = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setLoading(true)
-        setError(null)
-        setMessage(null)
-
-        try {
-            const { error } = await supabase.auth.verifyOtp({
-                email,
-                token: otp,
-                type: 'email',
-            })
-
-            if (error) throw error
-
-            setStep('password')
-            setMessage('OTP verified. Please set your new password.')
-        } catch (err: any) {
-            setError(err.message)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleUpdatePassword = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setLoading(true)
-        setError(null)
-        setMessage(null)
-
-        try {
-            const { error } = await supabase.auth.updateUser({
-                password: password,
-            })
-
-            if (error) throw error
-
-            setMessage('Password updated successfully! Redirecting...')
-            setTimeout(() => {
-                router.push('/')
-            }, 2000)
-        } catch (err: any) {
-            setError(err.message)
-        } finally {
-            setLoading(false)
-        }
+    async function handleSubmit(formData: FormData) {
+        setError('')
+        startTransition(async () => {
+            const res = await forgotPasswordAction(formData)
+            if (res?.error) setError(res.error)
+        })
     }
 
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Reset your password
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    {step === 'email' && 'Enter your email address to receive an OTP.'}
-                    {step === 'otp' && 'Enter the OTP sent to your email.'}
-                    {step === 'password' && 'Enter your new password.'}
-                </p>
-            </div>
-
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
-                    {error && (
-                        <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-700">
-                            {error}
-                        </div>
-                    )}
-                    {message && (
-                        <div className="mb-4 rounded-md bg-green-50 p-4 text-sm text-green-700">
-                            {message}
-                        </div>
-                    )}
-
-                    {step === 'email' && (
-                        <form onSubmit={handleSendOtp} className="space-y-6">
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Email address
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
-                                >
-                                    {loading ? 'Sending...' : 'Send OTP'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    {step === 'otp' && (
-                        <form onSubmit={handleVerifyOtp} className="space-y-6">
-                            <div>
-                                <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
-                                    OTP Code
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        id="otp"
-                                        name="otp"
-                                        type="text"
-                                        required
-                                        value={otp}
-                                        onChange={(e) => setOtp(e.target.value)}
-                                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
-                                >
-                                    {loading ? 'Verifying...' : 'Verify OTP'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    {step === 'password' && (
-                        <form onSubmit={handleUpdatePassword} className="space-y-6">
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                    New Password
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm text-gray-900"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
-                                >
-                                    {loading ? 'Updating...' : 'Update Password'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    <div className="mt-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300" />
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="bg-white px-2 text-gray-500">Or</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 text-center">
-                            <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                                Back to Sign In
-                            </a>
-                        </div>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+                <div className="text-center">
+                    <div className="mx-auto h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                        <Mail className="h-6 w-6 text-indigo-600" />
                     </div>
+                    <h2 className="text-3xl font-bold text-gray-900">Reset Password</h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                        Enter your email address and we'll send you a code to reset your password.
+                    </p>
                 </div>
+
+                <form action={handleSubmit} className="mt-8 space-y-6">
+                    {error && (
+                        <div className="rounded-md bg-red-50 p-4 border border-red-200">
+                            <p className="text-sm font-medium text-red-800">{error}</p>
+                        </div>
+                    )}
+                    
+                    <div>
+                        <label htmlFor="email" className="sr-only">Email address</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors"
+                            placeholder="Enter your email"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={isPending}
+                        className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+                    >
+                        {isPending ? <Loader2 className="animate-spin h-5 w-5" /> : "Send Reset Code"}
+                    </button>
+                    
+                    <div className="flex justify-center">
+                        <Link href="/login" className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Login
+                        </Link>
+                    </div>
+                </form>
             </div>
         </div>
     )
