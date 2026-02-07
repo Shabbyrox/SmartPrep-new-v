@@ -47,16 +47,19 @@ export default function LandingHeader() {
       className="sticky top-0 z-50 w-full border-b border-slate-200/40 bg-white/80 backdrop-blur-md"
     >
       <div className="container mx-auto flex h-16 items-center px-8">
-        <Link href="/" className="flex items-center space-x-2">
-          {/* <Image 
-             src="/intraa_icon.jpeg" 
-             alt="Intraa Logo"
-             width={130} 
-             height={60} 
-             className="h-10 w-auto object-contain"
-             priority
-          /> */}
-          <span className="text-2xl tracking-tight text-slate-900" style={{ fontWeight: 600, letterSpacing: '-0.02em' }}>Intraa</span>
+        <Link href="/" className="flex items-center z-50">
+           <Image 
+              src="/intraa_latest_logo.jpeg" 
+              alt="Intraa Logo"
+              width={180}   // Base width (high res for retina)
+              height={60}   // Base height
+              // 👇 RESPONSIVE MAGIC:
+              // h-8 (32px) on mobile -> Prevents it from looking huge
+              // md:h-10 (40px) on laptop -> Looks standard size
+              // w-auto -> Automatically adjusts width to match height (prevents stretching)
+              className="h-8 w-auto md:h-10 object-contain"
+              priority 
+           />
         </Link>
         
         <nav className="ml-auto flex items-center space-x-8">
