@@ -54,17 +54,19 @@ export default function Navbar() {
                     {/* Left Side */}
                     <div className="flex">
                         <div className="flex shrink-0 items-center">
-                            <Link href="/dashboard" className="flex items-center gap-2">
-                                {/* <Image 
-                                    src="/intraa_icon.jpeg"
+                            <Link href="/dashboard" className="flex items-center z-50">
+                                <Image 
+                                    src="/intraa_latest_logo.jpeg" 
                                     alt="Intraa Logo"
-                                    width={120} 
-                                    height={120} 
-                                    className="h-12 w-auto rounded-md object-contain" 
-                                /> */}
-                                <span className="text-xl font-bold text-slate-900 tracking-tight">
-                                    Intraa
-                                </span>
+                                    width={180}   // Base width (high res for retina)
+                                    height={40}   // Base height
+                                    // 👇 RESPONSIVE MAGIC:
+                                    // h-8 (32px) on mobile -> Prevents it from looking huge
+                                    // md:h-10 (40px) on laptop -> Looks standard size
+                                    // w-auto -> Automatically adjusts width to match height (prevents stretching)
+                                    className="h-8 w-auto md:h-10 object-contain"
+                                    priority 
+                                />
                             </Link>
                         </div>
                         
