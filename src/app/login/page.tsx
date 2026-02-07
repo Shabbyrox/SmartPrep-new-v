@@ -1,108 +1,115 @@
 // src/app/login/page.tsx
 'use client'
 
-import { useState, useEffect, Suspense } from 'react' // 👈 Added Suspense and useEffect
+import { useState, useEffect, Suspense } from 'react'
 import { motion } from 'framer-motion'
-import { useSearchParams } from 'next/navigation' // 👈 Added useSearchParams
+import { useSearchParams } from 'next/navigation'
 import { login, signup } from './actions'
 import GoogleSignInButton from './google-signin-button'
 import LandingHeader from '@/components/LandingHeader'
 import LandingFooter from '@/components/LandingFooter'
-import Footer from '@/app/page'
+import Link from 'next/link'
 
-// Create a separate component for the form logic to handle SearchParams safely
 function LoginForm() {
   const [isLogin, setIsLogin] = useState(true)
   const searchParams = useSearchParams()
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  // 👇 Check URL for "?signup=true" when page loads
   useEffect(() => {
-    if (searchParams.get('signup') === 'true') {
-      setIsLogin(false) // Switch to Sign Up mode
+    if (searchParams.get('signup') === 'true') setIsLogin(false)
+    if (searchParams.get('verified') === 'true') {
+        setSuccess('Account verified! Please log in.')
+        setIsLogin(true)
     }
   }, [searchParams])
 
+  async function handleSubmit(formData: FormData) {
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+    
+    const action = isLogin ? login : signup
+    const result = await action(formData)
+    
+    setLoading(false)
+    if (result?.error) {
+      setError(result.error)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center px-8 py-12 bg-white">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <div className="bg-white p-8 shadow-lg border border-slate-200 rounded-xl">
           <div className="mb-8">
-            <h2 className="text-3xl mb-2 text-slate-900" style={{ fontWeight: 600 }}>
+            <h2 className="text-3xl mb-2 text-slate-900 font-semibold">
               {isLogin ? 'Welcome back' : 'Create account'}
             </h2>
-            <p className="text-slate-500">
-              {isLogin ? 'Enter your credentials to continue' : 'Start your career journey today'}
-            </p>
           </div>
 
-          <form className="space-y-6">
+          {error && <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">{error}</div>}
+          {success && <div className="mb-4 p-3 text-sm text-green-600 bg-green-50 rounded-md border border-green-200">{success}</div>}
+
+          <form action={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-slate-700">Full Name</label>
-                <input
-                  id="name"
-                  name="name"
-                  placeholder="John Doe"
-                  className="flex h-10 w-full rounded-md border text-slate-900 border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                <input name="name" required placeholder="John Doe" className="w-full h-10 text-slate-600 px-3 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" />
               </div>
             )}
             
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-slate-700">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                placeholder="you@example.com"
-                className="flex h-10 w-full rounded-md text-slate-900 border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input name="email" type="email" required placeholder="you@example.com" className="text-slate-600 w-full h-10 px-3 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-slate-700">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                placeholder="••••••••"
-                className="flex h-10 w-full rounded-md text-slate-900 border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <input 
+                name="password" 
+                type="password" 
+                required 
+                placeholder="••••••••" 
+                className="text-slate-600 w-full h-10 px-3 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" 
               />
+              
+              {/* 👇 Link moved BELOW the field and aligned LEFT */}
+              {isLogin && (
+                <div className="mt-1 text-right">
+                  <Link 
+                    href="/forgot-password" 
+                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
             </div>
 
-            <button
-              formAction={isLogin ? login : signup}
-              className="w-full inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors h-11"
-            >
-              {isLogin ? 'Log in' : 'Create account'}
+
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Confirm Password</label>
+                <input name="confirmPassword" type="password" required placeholder="••••••••" className="text-slate-600 w-full h-10 px-3 rounded-md border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none" />
+              </div>
+            )}
+
+            <button disabled={loading} type="submit" className="w-full h-11 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors disabled:opacity-70">
+              {loading ? 'Processing...' : (isLogin ? 'Log in' : 'Create account')}
             </button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-500">Or continue with</span>
-              </div>
+            
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-500">Or continue with</span></div>
             </div>
-
-            <div className="w-full">
-              <GoogleSignInButton />
-            </div>
+            <GoogleSignInButton />
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-indigo-600 hover:underline hover:text-indigo-500 font-medium transition-colors"
-            >
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-indigo-600 hover:underline font-medium">
               {isLogin ? "Don't have an account? Create one" : 'Already have an account? Log in'}
             </button>
           </div>
